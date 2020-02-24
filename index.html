@@ -1,1 +1,453 @@
-TEST
+<!-- <div class="container">
+  <canvas id="c" width="700" height="420" style="background:#0000ff 0">
+  
+  </canvas>
+</div> -->
+
+
+<html>
+  
+<head>
+
+  <link rel="manifest" href="./manifest.json">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    
+  <title> Air Hockey</title>
+  
+  <style>
+
+    
+    
+    {
+      padding: 800; margin: 300;
+    }
+    
+    canvas {
+      background: ; display: inline-block; margin: 20px auto; margin-top: 50px;
+    }
+  </style>
+  
+  <canvas id= "canvas" width ="520" height = "650">
+  </canvas>
+  
+  <script>
+      // Declaring variables to be used in the game setup
+
+    
+    var canvas = document.getElementById('canvas');
+    ctx = canvas.getContext('2d');
+    var gm = true;
+
+    var x_low=30;
+    var x_high=460;
+    var y_low=30;
+    var y_high=600;
+    var ball_Speed = 10;
+    var h_speed = 0;
+    var w_speed = 0;
+    var player1_Score = 0;
+    var player2_Score = 0;
+    
+    
+
+    document.addEventListener("mousemove", mouseMoveHandler, false);
+
+  
+    // document.addEventListener("keydown", keyDownHandler, false);
+    
+    // document.addEventListener("keyup", keyUpHandler, false);
+    
+      // This function would draw a rectangular field for the game
+  
+    
+    function Goal(x,y,r,setup)
+    {
+      ctx.beginPath();
+      ctx.lineWidth = 4;
+      
+      if(setup)
+        ctx.arc(x, y, r, 0, Math.PI, false);
+      
+      else
+        ctx.arc(x,y,r, Math.PI, 0, false);
+      
+      ctx.strokeStyle = "#211b38";
+      ctx.stroke();
+      ctx.closePath();
+      
+    }
+
+    
+    // This the Circle object for the Air Hockey Court.
+    
+    function Circle(x, y, r, w)
+    {
+      ctx.beginPath();
+      ctx.strokeStyle = "#2cff15";
+      ctx.arc(x, y, r, 0, Math.PI*2, false);
+      ctx.stroke();
+      ctx.closePath();
+      
+    }
+
+   function draw_rectangle(x, y, w, height, breadth)
+    {
+    
+      if(breadth)
+        {
+            
+          ctx.lineWidth = 40;
+          ctx.strokeStyle = "#6A2111";
+         }
+      
+      else {
+        
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = "#61281B";
+        
+      }
+      
+      ctx.strokeRect(x, y, w, height, breadth);
+    }
+      
+    
+
+     // This function would make the the Player 1, Player 2 (Sticks/ Round Paddles) and the playing ball (chuck).
+    
+    function draw_playingObjects(x, y, r, object)
+    
+    {
+      ctx.beginPath();
+      
+      ctx.arc(x, y, r, 0, Math.PI*2);
+      
+      if (object == 1)
+        {
+          
+          ctx.fillStyle = "#15ff9a";
+          ctx.strokeStyle = "#8a15ff";
+          
+         }
+      
+      else if (object == 2)
+        {
+          ctx.fillStyle = "#4F3934";
+          ctx.strokeStyle = "#15ff9a";
+          
+          }
+        
+      else if ( object == 3)
+        {
+          ctx.fillstyle = "#BA2200";
+           ctx.strokeStyle = "#15ff9a";
+          
+         
+        }
+      
+      ctx.fill();
+      ctx.lineWidth = 3;
+      
+      ctx.stroke();
+      ctx.closePath();
+        
+    }
+    
+    function draw_board()
+    {
+       draw_rectangle(0,0,520, 660,1);
+      draw_rectangle(30, 30, 460, 600, 0);
+      
+      Goal(240, 30, 70, 1);
+      Goal(240, 30, 150, 1);
+      Goal(240, 630, 70, 0);
+      Goal(240, 630, 150, 0);
+      
+      Circle(260, 330, 40, 4);
+      Circle(260, 330, 5, 4);
+        
+        
+
+        ctx.beginPath();
+        ctx.moveTo(190, 30);
+        ctx.lineTo(330, 30);
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = "#000";
+        ctx.stroke();
+        ctx.closePath();
+
+       // ctx.beginPath();
+        ctx.moveTo(30, 330);
+        ctx.lineTo(490, 330);
+        ctx.stroke();
+        ctx.closePath();
+
+        ctx.beginPath();
+        ctx.moveTo(190, 630);
+        ctx.lineTo(330, 630);
+        //ctx.strokeStyle("#FFFFFF");
+        ctx.stroke();
+        ctx.closePath();
+
+        ctx.font = "50px Pristina";
+        ctx.lineWidth = 4
+        ctx.strokeText(player1_Score,44,300);
+        ctx.strokeText(player2_Score,44,380);
+    }
+
+    function Space(x1,y1,x2,y2)
+    {
+        var x_1 = x2-x1;
+        var y_1 = y2-y1;
+        x_1*=x_1;
+        y_1*=y_1;
+        return Math.sqrt(x_1+y_1);
+    }
+
+
+    var Chuck = function(x,y,r)
+    {
+
+        this.x = x;
+        this.y = y;
+        this.radius = r;
+    }
+       // Implementing the Puck class
+    var pChuck = new Chuck(260,canvas.height-100,30);
+    
+    var cChuck = new Chuck(260,100,30);
+
+    // Ball class
+    var Ball = function (x,y,r) {
+        this.x = x;
+        this.y = y;
+        this.radius = r;
+    }
+    // ball object
+    var ball = new Ball(canvas.width/2,canvas.height-200,15); 
+
+
+    // function to control the mallet according to cursor
+    function mouseMoveHandler(e) {
+    var moveY = e.clientY -canvas.offsetTop;  
+    var moveX = e.clientX - canvas.offsetLeft;
+    
+
+      if(moveY > 0 && moveY < 600){
+            pChuck.y = moveY;
+        }   
+       if(moveX > 60 && moveX < canvas.width-60) {
+            pChuck.x = moveX;
+        }
+        //360
+        
+    }
+
+   
+        function game()
+        {
+
+          var gameOver = false; 
+
+           ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+
+           // drawing player_1's Chuck
+           draw_playingObjects(pChuck.x,pChuck.y,pChuck.radius,1);   
+           // drawing player_2's Chuck
+           draw_playingObjects(cChuck.x,cChuck.y,cChuck.radius,2);   
+           // drawing the ball
+           draw_playingObjects(ball.x,ball.y,ball.radius,0);
+
+           // draw draw the board
+           draw_board();
+           
+           
+           
+           // The major chunk of the game loic lies here. 
+           if(ball.x<300 && ball.x>150){
+             
+
+             if(ball.y + w_speed < 30-ball.radius ){
+                console.log("Player_2's Score");
+                ball.x = canvas.width/2;
+                ball.y = canvas.height/2-100;
+                h_speed = 0;
+                w_speed = 0;
+                player2_Score = player2_Score + 1; 
+            }
+            
+            else if(canvas.height+ball.radius-30 < ball.y + w_speed ){
+                console.log("Player_1's Score");
+                ball.x = canvas.width/2;
+                ball.y = canvas.height/2+100;
+                h_speed = 0;
+                w_speed = 0 ;
+                player1_Score = player1_Score + 1;
+            }
+           }
+           else{
+            if(ball.y + w_speed > canvas.height-ball.radius-30  || ball.y + w_speed  < 30+ball.radius){
+                w_speed *= -1;
+            }
+
+          
+
+            // This would allow us to bounce off the ball from the walls.
+           if(ball.x + h_speed < ball.radius + 30 || ball.x + h_speed > canvas.width-ball.radius-30) {
+                 h_speed *= -1;
+            }
+           }
+          
+        
+
+          // Below is the Math part of the game.    
+
+          if((Math.abs(h_speed)+Math.abs(w_speed))  < 10&&ball.y<=canvas.height/2){
+              if(ball.y-20<cChuck.y){
+
+                cChuck.y-=2;
+                  
+              }
+              else{
+                  cChuck.y+=2;
+              }
+          }
+
+          else if(cChuck.y<100){
+                  cChuck.y+=2;
+          }
+          else if(cChuck.y>100){
+                  cChuck.y-=2;
+          }
+          
+
+        var difficulty = false; 
+       var er = 1;
+        var p2s;
+
+
+    /// This would help both the players to stay in their boundries.
+   
+
+
+  if(cChuck.x<x_low)
+      {
+        cChuck.x=x_low+30;
+        }
+
+  if(cChuck.x>x_high)
+      {
+        cChuck.x=x_high+30;
+        }      
+   
+if(cChuck.y<y_low)
+      {
+        cChuck.y=y_low+60;
+        }
+
+if(cChuck.y>y_high)
+      {
+        cChuck.y=y_high;
+        }
+    
+      
+
+   
+    
+    // Takes care of the speed
+    if(!difficulty)
+    {
+      p2s = 2;
+      }
+    else{
+      p2s=3;
+      }
+    
+
+   // Checks if the ball is out of the way/ behind.
+    if(ball.y<cChuck.y&&ball.x>cChuck.x-30&&ball.x<cChuck.x+30)
+    {
+      p2s = -2;
+      }
+
+
+        // Simulates the movememnt of the ball and the player
+    if(cChuck.x<ball.x+er)
+    {
+      cChuck.x+=p2s;
+      }
+      else if(cChuck.x>ball.x-er)
+      {
+        cChuck.x-=p2s;
+        }
+
+
+
+
+    
+           
+
+
+          var pDist = Space(pChuck.x,pChuck.y,ball.x,ball.y);
+          
+          var cDist = Space(cChuck.x,cChuck.y,ball.x,ball.y);          
+          
+
+         // Function to hit the ball when player_2 is playing
+          if(cDist<45)
+          {
+            var cdx = ball.x - cChuck.x;
+            var cdy = ball.y- cChuck.y;
+            cdx/=45;
+            cdy/=45;
+            h_speed = cdx*ball_Speed;
+            w_speed = cdy*ball_Speed;
+          }
+
+          // Function to hit the ball for player
+          if(pDist<45)
+          {
+         
+            var dx = ball.x - pChuck.x;
+            var dy = ball.y - pChuck.y;
+            
+            dx/=30;
+            dy/=30;
+            h_speed = dx*ball_Speed;
+            w_speed = dy*ball_Speed;
+          }  
+
+         
+
+          // Adjustment for the ball.
+           ball.x += h_speed;
+           ball.y += w_speed;
+
+           h_speed *=0.99;
+           w_speed *=0.99;
+        }
+         
+        setInterval(game,10);   
+
+    
+	</script>
+
+
+    <script>
+
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+        .then(function(reg) {
+          // registration worked
+          console.log('Registration succeeded. Scope is ' + reg.scope);
+        }).catch(function(error) {
+          // registration failed
+          console.log('Registration failed with ' + error);
+        });
+      }
+
+      </script>
+</body>
+</head>
+</html>
